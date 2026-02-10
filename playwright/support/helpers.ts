@@ -9,4 +9,4 @@ export function generateOrderCode() {
       Array.from({ length }, () => digits[Math.floor(Math.random() * digits.length)]).join('');
   
     return `${randomLetters(3)}-${randomDigits(2)}${randomLetters(1)}${randomDigits(2)}${randomLetters(1)}`;
-  }
+}
