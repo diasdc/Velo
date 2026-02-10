@@ -1,15 +1,10 @@
 import { test, expect } from '@playwright/test'
 import { generateOrderCode } from '../support/helpers'
+import { OrderLookupPage } from '../support/pages/OrderLookupPage'
 
 /// AAA - Arrange, Act, Assert
 
 test.describe('Consulta de Pedido', ()=>{
-
-  // test.beforeAll(async () => {
-  //   console.log(
-  //     'beforeAll: roda uma vez antes de todos os testes.'
-  //   )
-  // })
 
   test.beforeEach(async ({page}) => { // beforeEach: roda antes de cada teste
     await page.goto('http://localhost:5173/')
@@ -18,18 +13,6 @@ test.describe('Consulta de Pedido', ()=>{
     await page.getByRole('link', { name: 'Consultar Pedido' }).click()
     await expect(page.getByRole('heading')).toContainText('Consultar Pedido')
   })
-
-  // test.afterEach(async () => {
-  //   console.log(
-  //     'afterEach: roda depois de cada teste.'
-  //   )
-  // })
-
-  // test.afterAll(async () => {
-  //   console.log(
-  //     'afterAll: roda uma vez depois de todos os testes.'
-  //   )
-  // })
 
   test('deve consultar um pedido aprovado', async ({ page }) => {
 
@@ -48,8 +31,9 @@ test.describe('Consulta de Pedido', ()=>{
     }
   
     // Act
-    await page.getByRole('textbox', { name: 'Número do Pedido' }).fill(order.number)
-    await page.getByRole('button', { name: 'Buscar Pedido' }).click()
+
+    const orderLookupPage = new OrderLookupPage(page)
+    await orderLookupPage.searchOrder(order.number)
   
     // Assert
     // const containerPedido = page.getByRole('paragraph')
@@ -116,8 +100,8 @@ test.describe('Consulta de Pedido', ()=>{
     }
   
     // Act
-    await page.getByRole('textbox', { name: 'Número do Pedido' }).fill(order.number)
-    await page.getByRole('button', { name: 'Buscar Pedido' }).click()
+    const orderLookupPage = new OrderLookupPage(page)
+    await orderLookupPage.searchOrder(order.number)
   
     // Assert
     // const containerPedido = page.getByRole('paragraph')
@@ -183,8 +167,8 @@ test.describe('Consulta de Pedido', ()=>{
     }
   
     // Act
-    await page.getByRole('textbox', { name: 'Número do Pedido' }).fill(order.number)
-    await page.getByRole('button', { name: 'Buscar Pedido' }).click()
+    const orderLookupPage = new OrderLookupPage(page)
+    await orderLookupPage.searchOrder(order.number)
   
     // Assert
     // const containerPedido = page.getByRole('paragraph')
@@ -240,8 +224,8 @@ test.describe('Consulta de Pedido', ()=>{
     const order = generateOrderCode()
   
     // Act
-    await page.getByRole('textbox', { name: 'Número do Pedido' }).fill(order)
-    await page.getByRole('button', { name: 'Buscar Pedido' }).click()
+    const orderLookupPage = new OrderLookupPage(page)
+    await orderLookupPage.searchOrder(order)
   
     // Assert
     await expect(page.locator('#root')).toMatchAriaSnapshot(`
@@ -252,4 +236,3 @@ test.describe('Consulta de Pedido', ()=>{
   
   })
 })
-
