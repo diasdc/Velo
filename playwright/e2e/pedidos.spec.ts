@@ -17,10 +17,9 @@ test.describe('Consulta de Pedido', ()=>{
   test('deve consultar um pedido aprovado', async ({ page }) => {
 
     // Test Data
-    // const order = 'VLO-19H18S'
     const order = {
       number: 'VLO-19H18S',
-      status: 'APROVADO',
+      status: 'APROVADO' as const,
       color: 'Glacier Blue',
       wheels: 'sport Wheels',
       customer: {
@@ -31,19 +30,10 @@ test.describe('Consulta de Pedido', ()=>{
     }
   
     // Act
-
     const orderLookupPage = new OrderLookupPage(page)
     await orderLookupPage.searchOrder(order.number)
   
     // Assert
-    // const containerPedido = page.getByRole('paragraph')
-    //   .filter({ hasText: /^Pedido$/ }) // Filtra a busca por um elemento do tipo parágrafo com o nome exato Pedido (começar com ^ e terminar com $ diz que é para buscar o termo exato)
-    //   .locator('..') // Sobe para o elemento pai da div que agrupa os elementos
-  // 
-    // await expect(containerPedido).toContainText(order, { timeout: 10000 })
-  // 
-    // await expect(page.getByText('APROVADO')).toBeVisible()
-
     await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
       - img
       - paragraph: Pedido
@@ -74,22 +64,16 @@ test.describe('Consulta de Pedido', ()=>{
       - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
       `);
 
-      const statusBadge = page.getByRole('status').filter({ hasText: order.status })
-
-      await expect(statusBadge).toHaveClass(/bg-green-100/)
-      await expect(statusBadge).toHaveClass(/text-green-700/)
-
-      const statusIcon = statusBadge.locator('svg')
-      await expect(statusIcon).toHaveClass(/lucide-circle-check-big/)
+    // Validação do badge de status encapsulada no Page Object
+    await orderLookupPage.validateStatusBadge(order.status)
   })
 
   test('deve consultar um pedido reprovado', async ({ page }) => {
 
     // Test Data
-    // const order = 'VLO-706PUN'
     const order = {
       number: 'VLO-706PUN',
-      status: 'REPROVADO',
+      status: 'REPROVADO' as const,
       color: 'Midnight Black',
       wheels: 'sport Wheels',
       customer: {
@@ -104,14 +88,6 @@ test.describe('Consulta de Pedido', ()=>{
     await orderLookupPage.searchOrder(order.number)
   
     // Assert
-    // const containerPedido = page.getByRole('paragraph')
-    //   .filter({ hasText: /^Pedido$/ }) // Filtra a busca por um elemento do tipo parágrafo com o nome exato Pedido (começar com ^ e terminar com $ diz que é para buscar o termo exato)
-    //   .locator('..') // Sobe para o elemento pai da div que agrupa os elementos
-  // 
-    // await expect(containerPedido).toContainText(order, { timeout: 10000 })
-  // 
-    // await expect(page.getByText('APROVADO')).toBeVisible()
-
     await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
       - img
       - paragraph: Pedido
@@ -142,13 +118,8 @@ test.describe('Consulta de Pedido', ()=>{
       - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
       `);
 
-      const statusBadge = page.getByRole('status').filter({ hasText: order.status })
-
-      await expect(statusBadge).toHaveClass(/bg-red-100/)
-      await expect(statusBadge).toHaveClass(/text-red-700/)
-
-      const statusIcon = statusBadge.locator('svg')
-      await expect(statusIcon).toHaveClass(/lucide-circle-x/)
+    // Validação do badge de status encapsulada no Page Object
+    await orderLookupPage.validateStatusBadge(order.status)
   })
 
   test('deve consultar um pedido em análise', async ({ page }) => {
@@ -156,7 +127,7 @@ test.describe('Consulta de Pedido', ()=>{
     // Test Data
     const order = {
       number: 'VLO-Z7GRYO',
-      status: 'EM_ANALISE',
+      status: 'EM_ANALISE' as const,
       color: 'Lunar White',
       wheels: 'aero Wheels',
       customer: {
@@ -171,14 +142,6 @@ test.describe('Consulta de Pedido', ()=>{
     await orderLookupPage.searchOrder(order.number)
   
     // Assert
-    // const containerPedido = page.getByRole('paragraph')
-    //   .filter({ hasText: /^Pedido$/ }) // Filtra a busca por um elemento do tipo parágrafo com o nome exato Pedido (começar com ^ e terminar com $ diz que é para buscar o termo exato)
-    //   .locator('..') // Sobe para o elemento pai da div que agrupa os elementos
-  // 
-    // await expect(containerPedido).toContainText(order, { timeout: 10000 })
-  // 
-    // await expect(page.getByText('APROVADO')).toBeVisible()
-
     await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
       - img
       - paragraph: Pedido
@@ -209,13 +172,8 @@ test.describe('Consulta de Pedido', ()=>{
       - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
       `);
 
-      const statusBadge = page.getByRole('status').filter({ hasText: order.status })
-
-      await expect(statusBadge).toHaveClass(/bg-amber-100/)
-      await expect(statusBadge).toHaveClass(/text-amber-700/)
-
-      const statusIcon = statusBadge.locator('svg')
-      await expect(statusIcon).toHaveClass(/lucide-clock/)
+    // Validação do badge de status encapsulada no Page Object
+    await orderLookupPage.validateStatusBadge(order.status)
   })
   
   test('deve exibir mensagem quando o pedido não é encontrado', async ({ page }) => {
@@ -228,11 +186,6 @@ test.describe('Consulta de Pedido', ()=>{
     await orderLookupPage.searchOrder(order)
   
     // Assert
-    await expect(page.locator('#root')).toMatchAriaSnapshot(`
-      - img
-      - heading "Pedido não encontrado" [level=3]
-      - paragraph: Verifique o número do pedido e tente novamente
-      `)
-  
+    await orderLookupPage.validateOrderNotFound()
   })
 })
