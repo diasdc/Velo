@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 import { generateOrderCode } from '../support/helpers'
 
-import { OrderLockupPage } from '../support/pages/OrderLookupPage'
+import { OrderLookupPage } from '../support/pages/OrderLookupPage'
 
 /// AAA - Arrange, Act, Assert
 
@@ -33,7 +33,7 @@ test.describe('Consulta de Pedido', () => {
     }
 
     // Act  
-    const orderLockupPage = new OrderLockupPage(page)
+    const orderLockupPage = new OrderLookupPage(page)
     await orderLockupPage.searchOrder(order.number)
 
     // Assert
@@ -88,7 +88,7 @@ test.describe('Consulta de Pedido', () => {
     }
 
     // Act  
-    const orderLockupPage = new OrderLockupPage(page)
+    const orderLockupPage = new OrderLookupPage(page)
     await orderLockupPage.searchOrder(order.number)
 
     // Assert
@@ -142,7 +142,7 @@ test.describe('Consulta de Pedido', () => {
     }
 
     // Act  
-    const orderLockupPage = new OrderLockupPage(page)
+    const orderLockupPage = new OrderLookupPage(page)
     await orderLockupPage.searchOrder(order.number)
 
     // Assert
@@ -184,8 +184,8 @@ test.describe('Consulta de Pedido', () => {
 
     const order = generateOrderCode()
 
-    const orderLockupPage = new OrderLockupPage(page)
-    await orderLockupPage.searchOrder(order)
+    const orderLookupPage = new OrderLookupPage(page)
+    await orderLookupPage.searchOrder(order)
 
 
     await expect(page.locator('#root')).toMatchAriaSnapshot(`
