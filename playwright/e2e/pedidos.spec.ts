@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test'
+
 import { generateOrderCode } from '../support/helpers'
-import { OrderLookupPage } from '../support/pages/OrderLookupPage'
+
+import { OrderLockupPage } from '../support/pages/OrderLookupPage'
 
 /// AAA - Arrange, Act, Assert
 
-test.describe('Consulta de Pedido', ()=>{
+test.describe('Consulta de Pedido', () => {
 
-  test.beforeEach(async ({page}) => { // beforeEach: roda antes de cada teste
+  test.beforeEach(async ({ page }) => {
+    // Arrange
     await page.goto('http://localhost:5173/')
     await expect(page.getByTestId('hero-section').getByRole('heading')).toContainText('Velô Sprint')
 
@@ -18,21 +21,21 @@ test.describe('Consulta de Pedido', ()=>{
 
     // Test Data
     const order = {
-      number: 'VLO-19H18S',
+      number: 'VLO-6E2J20',
       status: 'APROVADO' as const,
-      color: 'Glacier Blue',
-      wheels: 'sport Wheels',
+      color: 'Lunar White',
+      wheels: 'aero Wheels',
       customer: {
-        name: 'Costa Thiago',
-        email: 'thiago.costa@velo.dev',
+        name: 'Fernando Papito',
+        email: 'papito@velo.dev'
       },
       payment: 'À Vista'
     }
-  
-    // Act
-    const orderLookupPage = new OrderLookupPage(page)
-    await orderLookupPage.searchOrder(order.number)
-  
+
+    // Act  
+    const orderLockupPage = new OrderLockupPage(page)
+    await orderLockupPage.searchOrder(order.number)
+
     // Assert
     await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
       - img
@@ -65,28 +68,29 @@ test.describe('Consulta de Pedido', ()=>{
       `);
 
     // Validação do badge de status encapsulada no Page Object
-    await orderLookupPage.validateStatusBadge(order.status)
+    await orderLockupPage.validateStatusBadge(order.status)
+
   })
 
   test('deve consultar um pedido reprovado', async ({ page }) => {
 
     // Test Data
     const order = {
-      number: 'VLO-706PUN',
+      number: 'VLO-0LNFEA',
       status: 'REPROVADO' as const,
       color: 'Midnight Black',
       wheels: 'sport Wheels',
       customer: {
-        name: 'Miguel Costa',
-        email: 'costa@test.com',
+        name: 'Steve Jobs',
+        email: 'jobs@apple.com'
       },
       payment: 'À Vista'
     }
-  
-    // Act
-    const orderLookupPage = new OrderLookupPage(page)
-    await orderLookupPage.searchOrder(order.number)
-  
+
+    // Act  
+    const orderLockupPage = new OrderLockupPage(page)
+    await orderLockupPage.searchOrder(order.number)
+
     // Assert
     await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
       - img
@@ -119,28 +123,28 @@ test.describe('Consulta de Pedido', ()=>{
       `);
 
     // Validação do badge de status encapsulada no Page Object
-    await orderLookupPage.validateStatusBadge(order.status)
+    await orderLockupPage.validateStatusBadge(order.status)
   })
 
-  test('deve consultar um pedido em análise', async ({ page }) => {
+  test('deve consultar um pedido em analise', async ({ page }) => {
 
     // Test Data
     const order = {
-      number: 'VLO-Z7GRYO',
+      number: 'VLO-412O06',
       status: 'EM_ANALISE' as const,
       color: 'Lunar White',
       wheels: 'aero Wheels',
       customer: {
-        name: 'Ivan Costa',
-        email: 'ivancosta@teste.com',
+        name: 'João da Silva',
+        email: 'joao@velo.dev'
       },
       payment: 'À Vista'
     }
-  
-    // Act
-    const orderLookupPage = new OrderLookupPage(page)
-    await orderLookupPage.searchOrder(order.number)
-  
+
+    // Act  
+    const orderLockupPage = new OrderLockupPage(page)
+    await orderLockupPage.searchOrder(order.number)
+
     // Assert
     await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
       - img
@@ -173,19 +177,22 @@ test.describe('Consulta de Pedido', ()=>{
       `);
 
     // Validação do badge de status encapsulada no Page Object
-    await orderLookupPage.validateStatusBadge(order.status)
+    await orderLockupPage.validateStatusBadge(order.status)
   })
-  
+
   test('deve exibir mensagem quando o pedido não é encontrado', async ({ page }) => {
-  
-    // Test Data
+
     const order = generateOrderCode()
-  
-    // Act
-    const orderLookupPage = new OrderLookupPage(page)
-    await orderLookupPage.searchOrder(order)
-  
-    // Assert
-    await orderLookupPage.validateOrderNotFound()
+
+    const orderLockupPage = new OrderLockupPage(page)
+    await orderLockupPage.searchOrder(order)
+
+
+    await expect(page.locator('#root')).toMatchAriaSnapshot(`
+      - img
+      - heading "Pedido não encontrado" [level=3]
+      - paragraph: Verifique o número do pedido e tente novamente
+      `)
+
   })
 })
