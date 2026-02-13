@@ -1,248 +1,229 @@
-import { useState } from 'react';
-import { Search, Package, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatPrice, Order, ExteriorColor, WheelType } from '@/store/configuratorStore';
-import { getOrderByNumber } from '@/hooks/useOrders';
-import Header from '@/components/landing/Header';
+import { useState } from "react";
+import { getOrderByNumber } from "@/hooks/useOrders";
+import { Order, formatPrice, ExteriorColor, WheelType } from "@/store/configuratorStore";
+import { CircleCheckBig, CircleX, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-import glacierBlueAero from '@/assets/glacier-blue-aero-wheels.png';
-import glacierBlueSport from '@/assets/glacier-blue-sport-wheels.png';
-import lunarWhiteAero from '@/assets/lunar-white-aero-wheels.png';
-import lunarWhiteSport from '@/assets/lunar-white-sport-wheels.png';
-import midnightBlackAero from '@/assets/midnight-black-aero-wheels.png';
-import midnightBlackSport from '@/assets/midnight-black-sport-wheels.png';
+import logo from "@/assets/brand.svg";
+import glacierBlueAero from "@/assets/glacier-blue-aero-wheels.png";
+import glacierBlueSport from "@/assets/glacier-blue-sport-wheels.png";
+import lunarWhiteAero from "@/assets/lunar-white-aero-wheels.png";
+import lunarWhiteSport from "@/assets/lunar-white-sport-wheels.png";
+import midnightBlackAero from "@/assets/midnight-black-aero-wheels.png";
+import midnightBlackSport from "@/assets/midnight-black-sport-wheels.png";
 
-const carImages: Record<ExteriorColor, Record<WheelType, string>> = {
-  'glacier-blue': {
+const exteriorImages: Record<ExteriorColor, Record<WheelType, string>> = {
+  "glacier-blue": {
     aero: glacierBlueAero,
     sport: glacierBlueSport,
   },
-  'lunar-white': {
+  "lunar-white": {
     aero: lunarWhiteAero,
     sport: lunarWhiteSport,
   },
-  'midnight-black': {
+  "midnight-black": {
     aero: midnightBlackAero,
     sport: midnightBlackSport,
   },
 };
 
 const colorLabels: Record<ExteriorColor, string> = {
-  'glacier-blue': 'Glacier Blue',
-  'lunar-white': 'Lunar White',
-  'midnight-black': 'Midnight Black',
+  "glacier-blue": "Glacier Blue",
+  "lunar-white": "Lunar White",
+  "midnight-black": "Midnight Black",
+};
+
+const wheelLabels: Record<WheelType, string> = {
+  aero: "aero Wheels",
+  sport: "sport Wheels",
 };
 
 const OrderLookup = () => {
-  const [orderId, setOrderId] = useState('');
-  const [searchedOrder, setSearchedOrder] = useState<Order | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
+  const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setNotFound(false);
-    setSearchedOrder(null);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsLoading(true);
-    
-    const { order, error } = await getOrderByNumber(orderId);
-    
+    setError(null);
+    setOrder(null);
+
+    const { order: foundOrder, error: fetchError } = await getOrderByNumber(
+      orderNumber
+    );
+
     setIsLoading(false);
-    
-    if (error) {
-      setNotFound(true);
+
+    if (fetchError) {
+      setError(fetchError);
       return;
     }
-    
-    if (order) {
-        setSearchedOrder(order);
-    } else {
-      setNotFound(true);
+
+    if (!foundOrder) {
+      setError("not_found");
+      return;
+    }
+
+    setOrder(foundOrder);
+  };
+
+  const getStatusIcon = (status: Order["status"]) => {
+    switch (status) {
+      case "APROVADO":
+        return (
+          <CircleCheckBig className="w-5 h-5 lucide-circle-check-big" />
+        );
+      case "REPROVADO":
+        return <CircleX className="w-5 h-5 lucide-circle-x" />;
+      case "EM_ANALISE":
+        return <Clock className="w-5 h-5 lucide-clock" />;
     }
   };
 
+  const getStatusBadgeClasses = (status: Order["status"]) => {
+    switch (status) {
+      case "APROVADO":
+        return "bg-green-100 text-green-700";
+      case "REPROVADO":
+        return "bg-red-100 text-red-700";
+      case "EM_ANALISE":
+        return "bg-amber-100 text-amber-700";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR");
+  };
+
+  const getPaymentMethodLabel = (method: "avista" | "financiamento") => {
+    return method === "avista" ? "À Vista" : "Financiamento";
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <main className="container mx-auto max-w-3xl py-10 px-4">
+      <header className="mb-8">
+        <img src={logo} alt="Velô" className="h-8 mb-4" />
+        <h1 className="text-3xl font-semibold">Consultar Pedido</h1>
+        <p className="text-muted-foreground mt-2">
+          Informe o número do seu pedido para consultar os detalhes.
+        </p>
+      </header>
 
-      <div className="container mx-auto px-4 py-12 max-w-2xl pt-24">
-        {/* Search Form */}
-        <Card className="mb-8">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <Search className="w-8 h-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-display">Consultar Pedido</CardTitle>
-            <p className="text-muted-foreground mt-2">
-              Digite o número do seu pedido para verificar o status
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div>
-                <Label htmlFor="order-id">Número do Pedido</Label>
-                <Input
-                  type="text"
-                  id="order-id"
-                  placeholder="Ex: VLO-ABC123"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!orderId.trim() || isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Buscando...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4 mr-2" />
-                    Buscar Pedido
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <section aria-label="Consulta de pedido">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="order-number" className="font-medium">
+              Número do Pedido
+            </label>
+            <input
+              id="order-number"
+              name="order-number"
+              type="text"
+              value={orderNumber}
+              onChange={(e) => setOrderNumber(e.target.value)}
+              className="border rounded-md px-3 py-2"
+              role="textbox"
+              aria-label="Número do Pedido"
+            />
+          </div>
 
-        {/* Not Found Message */}
-        {notFound && (
-          <Card className="border-destructive/50 bg-destructive/5 animate-fade-in">
-            <CardContent className="py-8 text-center">
-              <XCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                Pedido não encontrado
-              </h3>
-              <p className="text-muted-foreground">
-                Verifique o número do pedido e tente novamente
-              </p>
-            </CardContent>
-          </Card>
-        )}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            role="button"
+            aria-label="Buscar Pedido"
+          >
+            {isLoading ? "Buscando..." : "Buscar Pedido"}
+          </button>
+        </form>
+      </section>
 
-        {/* Order Result */}
-        {searchedOrder && (
-          <Card className="animate-fade-in" data-testid={`order-result-${searchedOrder.id}`}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pedido</p>
-                    <p className="font-mono font-medium">
-                      {searchedOrder.id}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  role="status"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-                    searchedOrder.status === 'APROVADO'
-                      ? 'bg-green-100 text-green-700'
-                      : searchedOrder.status === 'EM_ANALISE'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {searchedOrder.status === 'APROVADO' ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : searchedOrder.status === 'EM_ANALISE' ? (
-                    <Clock className="w-4 h-4" />
-                  ) : (
-                    <XCircle className="w-4 h-4" />
-                  )}
-                  {searchedOrder.status}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Car Image */}
-              <div className="bg-secondary/30 rounded-lg p-4">
-                <img
-                  src={carImages[searchedOrder.configuration.exteriorColor][searchedOrder.configuration.wheelType]}
-                  alt="Velô Sprint"
-                  className="w-full max-w-xs mx-auto"
-                />
-              </div>
+      {isLoading && (
+        <div className="mt-8 text-center text-muted-foreground">
+          Buscando pedido...
+        </div>
+      )}
 
-              {/* Configuration Details */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Modelo</p>
-                  <p className="font-medium">Velô Sprint</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Cor</p>
-                  <p className="font-medium">{colorLabels[searchedOrder.configuration.exteriorColor]}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Interior</p>
-                  <p className="font-medium capitalize">{searchedOrder.configuration.interiorColor.replace('-', ' ')}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Rodas</p>
-                  <p className="font-medium capitalize">{searchedOrder.configuration.wheelType} Wheels</p>
-                </div>
-              </div>
+      {error === "not_found" && (
+        <div className="mt-8">
+          <h3 className="text-2xl font-semibold mb-2">Pedido não encontrado</h3>
+          <p>Verifique o número do pedido e tente novamente</p>
+        </div>
+      )}
 
-              {/* Customer Info */}
-              <div className="border-t border-border pt-4">
-                <h4 className="text-sm font-medium text-foreground mb-3">Dados do Cliente</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Nome</p>
-                    <p className="font-medium">{searchedOrder.customer.name} {searchedOrder.customer.surname}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Email</p>
-                    <p className="font-medium">{searchedOrder.customer.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Loja de Retirada</p>
-                    <p className="font-medium">{searchedOrder.customer.store}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Data do Pedido</p>
-                    <p className="font-medium">
-                      {new Date(searchedOrder.createdAt).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {error && error !== "not_found" && (
+        <div className="mt-8 text-destructive">
+          <p>Erro ao buscar pedido: {error}</p>
+        </div>
+      )}
 
-              {/* Payment Info */}
-              <div className="border-t border-border pt-4">
-                <h4 className="text-sm font-medium text-foreground mb-3">Pagamento</h4>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-muted-foreground text-sm">
-                      {searchedOrder.paymentMethod === 'avista' ? 'À Vista' : 'Financiamento 12x'}
-                    </p>
-                    {searchedOrder.paymentMethod === 'financiamento' && searchedOrder.installmentValue && (
-                      <p className="text-sm text-muted-foreground">
-                        12x de {formatPrice(searchedOrder.installmentValue)}
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-xl font-display font-semibold text-foreground">
-                    {formatPrice(searchedOrder.totalPrice)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
+      {order && (
+        <div
+          className="mt-8 bg-card rounded-lg shadow-lg p-6"
+          data-testid={`order-result-${order.id}`}
+        >
+          <img
+            src={
+              exteriorImages[order.configuration.exteriorColor][
+                order.configuration.wheelType
+              ]
+            }
+            alt="Velô Sprint"
+            className="w-32 h-20 object-cover rounded-lg mb-4"
+          />
+          <p>Pedido</p>
+          <p>{order.id}</p>
+          <div
+            role="status"
+            className={cn(
+              "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium my-4",
+              getStatusBadgeClasses(order.status)
+            )}
+          >
+            {getStatusIcon(order.status)}
+            <span>{order.status}</span>
+          </div>
+
+          <img
+            src={
+              exteriorImages[order.configuration.exteriorColor][
+                order.configuration.wheelType
+              ]
+            }
+            alt="Velô Sprint"
+            className="w-full h-auto rounded-lg mb-4"
+          />
+          <p>Modelo</p>
+          <p>Velô Sprint</p>
+          <p>Cor</p>
+          <p>{colorLabels[order.configuration.exteriorColor]}</p>
+          <p>Interior</p>
+          <p>cream</p>
+          <p>Rodas</p>
+          <p>{wheelLabels[order.configuration.wheelType]}</p>
+
+          <h4 className="text-lg font-semibold mt-6 mb-4">Dados do Cliente</h4>
+          <p>Nome</p>
+          <p>
+            {order.customer.name} {order.customer.surname}
+          </p>
+          <p>Email</p>
+          <p>{order.customer.email}</p>
+          <p>Loja de Retirada</p>
+          <p>{order.customer.store || ""}</p>
+          <p>Data do Pedido</p>
+          <p>{formatDate(order.createdAt)}</p>
+
+          <h4 className="text-lg font-semibold mt-6 mb-4">Pagamento</h4>
+          <p>{getPaymentMethodLabel(order.paymentMethod)}</p>
+          <p>{formatPrice(order.totalPrice)}</p>
+        </div>
+      )}
+    </main>
   );
 };
 
