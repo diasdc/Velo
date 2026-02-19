@@ -1,30 +1,16 @@
-import { test } from '@playwright/test'
-
-import { generateOrderCode } from '../support/helpers'
-import { Navbar } from '../support/components/Navbar'
-import { HomePage } from '../support/pages/HomePage'
-import { OrderLookupPage, type OrderDetails } from '../support/pages/OrderLookupPage'
+import { test, expect } from '../support/fixtures';
+import { generateOrderCode } from '../support/helpers';
+import type { OrderDetails } from '../support/actions/orderLookupActions';
 
 /// AAA - Arrange, Act, Assert
 
 test.describe('Consulta de Pedido', () => {
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ app }) => {
     // Arrange
-    const homePage = new HomePage(page)
-    await homePage.goto()
-    await homePage.expectHeroVisible()
+    await app.orderLookup.open();
+  });
 
-    const navbar = new Navbar(page)
-    await navbar.orderLookupLink()
-
-    const orderLookupPage = new OrderLookupPage(page)
-    await orderLookupPage.expectPageLoaded()
-  })
-
-  test('deve consultar um pedido aprovado', async ({ page }) => {
-
-    // Test Data
+  test('deve consultar um pedido aprovado', async ({ app }) => {
     const order: OrderDetails = {
       number: 'VLO-MI0HWS',
       status: 'APROVADO',
@@ -32,23 +18,18 @@ test.describe('Consulta de Pedido', () => {
       wheels: 'aero Wheels',
       customer: {
         name: 'Thiago Costa',
-        email: 'diasdc@gmail.com'
+        email: 'diasdc@gmail.com',
       },
-      payment: 'À Vista'
-    }
+      payment: 'À Vista',
+    };
 
-    // Act
-    const orderLockupPage = new OrderLookupPage(page)
-    await orderLockupPage.searchOrder(order.number)
+    await app.orderLookup.searchOrder(order.number);
 
-    // Assert
-    await orderLockupPage.validateOrderDetails(order)
-    await orderLockupPage.validateStatusBadge(order.status)
-  })
+    await app.orderLookup.validateOrderDetails(order);
+    await app.orderLookup.validateStatusBadge(order.status);
+  });
 
-  test('deve consultar um pedido reprovado', async ({ page }) => {
-
-    // Test Data
+  test('deve consultar um pedido reprovado', async ({ app }) => {
     const order: OrderDetails = {
       number: 'VLO-706PUN',
       status: 'REPROVADO',
@@ -56,23 +37,18 @@ test.describe('Consulta de Pedido', () => {
       wheels: 'sport Wheels',
       customer: {
         name: 'Miguel Costa',
-        email: 'costa@test.com'
+        email: 'costa@test.com',
       },
-      payment: 'À Vista'
-    }
+      payment: 'À Vista',
+    };
 
-    // Act
-    const orderLockupPage = new OrderLookupPage(page)
-    await orderLockupPage.searchOrder(order.number)
+    await app.orderLookup.searchOrder(order.number);
 
-    // Assert
-    await orderLockupPage.validateOrderDetails(order)
-    await orderLockupPage.validateStatusBadge(order.status)
-  })
+    await app.orderLookup.validateOrderDetails(order);
+    await app.orderLookup.validateStatusBadge(order.status);
+  });
 
-  test('deve consultar um pedido em analise', async ({ page }) => {
-
-    // Test Data
+  test('deve consultar um pedido em analise', async ({ app }) => {
     const order: OrderDetails = {
       number: 'VLO-Z7GRYO',
       status: 'EM_ANALISE',
@@ -80,37 +56,34 @@ test.describe('Consulta de Pedido', () => {
       wheels: 'aero Wheels',
       customer: {
         name: 'Ivan Costa',
-        email: 'ivancosta@teste.com'
+        email: 'ivancosta@teste.com',
       },
-      payment: 'À Vista'
-    }
+      payment: 'À Vista',
+    };
 
-    // Act
-    const orderLockupPage = new OrderLookupPage(page)
-    await orderLockupPage.searchOrder(order.number)
+    await app.orderLookup.searchOrder(order.number);
 
-    // Assert
-    await orderLockupPage.validateOrderDetails(order)
-    await orderLockupPage.validateStatusBadge(order.status)
-  })
+    await app.orderLookup.validateOrderDetails(order);
+    await app.orderLookup.validateStatusBadge(order.status);
+  });
 
-  test('deve exibir mensagem quando o pedido não é encontrado', async ({ page }) => {
+  test('deve exibir mensagem quando o pedido não é encontrado', async ({
+    app,
+  }) => {
+    const order = generateOrderCode();
 
-    const order = generateOrderCode()
+    await app.orderLookup.searchOrder(order);
 
-    const orderLookupPage = new OrderLookupPage(page)
-    await orderLookupPage.searchOrder(order)
+    await app.orderLookup.validateOrderNotFound();
+  });
 
-    await orderLookupPage.validateOrderNotFound()
-  })
+  test('deve exibir mensagem quando o código do pedido está fora do padrão', async ({
+    app,
+  }) => {
+    const codigoForaDoPadrao = 'XXX-999';
 
-  test('deve exibir mensagem quando o código do pedido está fora do padrão', async ({ page }) => {
+    await app.orderLookup.searchOrder(codigoForaDoPadrao);
 
-    const codigoForaDoPadrao = 'XXX-999'
-
-    const orderLookupPage = new OrderLookupPage(page)
-    await orderLookupPage.searchOrder(codigoForaDoPadrao)
-
-    await orderLookupPage.validateOrderNotFound()
-  })
-})
+    await app.orderLookup.validateOrderNotFound();
+  });
+});
