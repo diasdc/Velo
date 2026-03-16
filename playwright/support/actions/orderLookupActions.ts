@@ -1,39 +1,15 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test'
 
-export type OrderStatus = 'APROVADO' | 'REPROVADO' | 'EM_ANALISE';
+export type OrderStatus = 'APROVADO' | 'REPROVADO' | 'EM_ANALISE'
 
-export interface OrderDetails {
-  number: string;
-  status: OrderStatus;
-  color: string;
-  wheels: string;
-  customer: { name: string; email: string };
-  payment: string;
+export type OrderDetails = {
+  number: string
+  status: OrderStatus
+  color: string
+  wheels: string
+  customer: { name: string; email: string }
+  payment: string
 }
-
-interface StatusBadgeConfig {
-  bgClass: string;
-  textClass: string;
-  iconClass: string;
-}
-
-const STATUS_CONFIGS: Record<OrderStatus, StatusBadgeConfig> = {
-  APROVADO: {
-    bgClass: 'bg-green-100',
-    textClass: 'text-green-700',
-    iconClass: 'lucide-circle-check-big',
-  },
-  REPROVADO: {
-    bgClass: 'bg-red-100',
-    textClass: 'text-red-700',
-    iconClass: 'lucide-circle-x',
-  },
-  EM_ANALISE: {
-    bgClass: 'bg-amber-100',
-    textClass: 'text-amber-700',
-    iconClass: 'lucide-clock',
-  },
-};
 
 export function createOrderLookupActions(page: Page) {
 
@@ -48,31 +24,20 @@ export function createOrderLookupActions(page: Page) {
     },
 
     async open() {
-      await page.goto('/');
-      const title = page.getByTestId('hero-section').getByRole('heading');
-      await expect(title).toContainText('Velô Sprint');
+      await page.goto('/')
+      const title = page.getByTestId('hero-section').getByRole('heading')
+      await expect(title).toContainText('Velô Sprint')
 
-      await page.getByRole('link', { name: 'Consultar Pedido' }).click();
-      await expect(page.getByRole('heading')).toContainText('Consultar Pedido');
+      await page.getByRole('link', { name: 'Consultar Pedido' }).click()
+      await expect(page.getByRole('heading')).toContainText('Consultar Pedido')
     },
 
     async searchOrder(code: string) {
-      await orderInput.fill(code);
-      await searchButton.click();
+      await orderInput.fill(code)
+      await searchButton.click()
     },
-    
-    async validateStatusBadge(status: OrderStatus) {
-      const config = STATUS_CONFIGS[status];
-      const statusBadge = page.getByRole('status').filter({ hasText: status });
 
-      await expect(statusBadge).toHaveClass(new RegExp(config.bgClass));
-      await expect(statusBadge).toHaveClass(new RegExp(config.textClass));
-
-      const statusIcon = statusBadge.locator('svg');
-      await expect(statusIcon).toHaveClass(new RegExp(config.iconClass));
-    },
     async validateOrderDetails(order: OrderDetails) {
-      const container = page.getByTestId(`order-result-${order.number}`);
       const snapshot = `
       - img
       - paragraph: Pedido
@@ -101,15 +66,43 @@ export function createOrderLookupActions(page: Page) {
       - heading "Pagamento" [level=4]
       - paragraph: ${order.payment}
       - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
-      `;
-      await expect(container).toMatchAriaSnapshot(snapshot);
+      `
+      await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(snapshot)
     },
+
+    async validateStatusBadge(status: OrderStatus) {
+      const statusClasses = {
+        APROVADO: {
+          background: 'bg-green-100',
+          text: 'text-green-700',
+          icon: 'lucide-circle-check-big',
+        },
+        REPROVADO: {
+          background: 'bg-red-100',
+          text: 'text-red-700',
+          icon: 'lucide-circle-x',
+        },
+        EM_ANALISE: {
+          background: 'bg-amber-100',
+          text: 'text-amber-700',
+          icon: 'lucide-clock',
+        },
+      } as const
+
+      const classes = statusClasses[status]
+      const statusBadge = page.getByRole('status').filter({ hasText: status })
+
+      await expect(statusBadge).toHaveClass(new RegExp(classes.background))
+      await expect(statusBadge).toHaveClass(new RegExp(classes.text))
+      await expect(statusBadge.locator('svg')).toHaveClass(new RegExp(classes.icon))
+    },
+
     async validateOrderNotFound() {
       await expect(page.locator('#root')).toMatchAriaSnapshot(`
       - img
       - heading "Pedido não encontrado" [level=3]
       - paragraph: Verifique o número do pedido e tente novamente
-      `);
+      `)
     },
-  };
+  }
 }
