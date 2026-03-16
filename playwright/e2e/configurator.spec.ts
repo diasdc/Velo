@@ -1,4 +1,4 @@
-import { test } from '../support/fixtures'
+import { test, expect } from '../support/fixtures'
 
 test.describe('Configuração do Veículo', () => {
   test.beforeEach(async ({ app }) => {
@@ -23,5 +23,25 @@ test.describe('Configuração do Veículo', () => {
     await app.configurator.selectWheels(/Aero Wheels/)
     await app.configurator.expectPrice('R$ 40.000,00')
     await app.configurator.expectCarImageSrc('/src/assets/glacier-blue-aero-wheels.png')
+  })
+
+  test('CT03 - deve atualizar o preço ao adicionar e remover opcionais e manter o valor no checkout', async ({ app, page }) => {
+    await app.configurator.expectPrice('R$ 40.000,00')
+
+    await app.configurator.setOptional(/Precision Park/, true)
+    await app.configurator.expectPrice('R$ 45.500,00')
+
+    await app.configurator.setOptional(/Flux Capacitor/, true)
+    await app.configurator.expectPrice('R$ 50.500,00')
+
+    await app.configurator.setOptional(/Precision Park/, false)
+    await app.configurator.setOptional(/Flux Capacitor/, false)
+    await app.configurator.expectPrice('R$ 40.000,00')
+
+    await page.getByRole('button', { name: 'Monte o Seu' }).click()
+    await expect(page).toHaveURL(/\/order/)
+    const summaryTotal = page.getByTestId('summary-total-price')
+    await expect(summaryTotal).toBeVisible()
+    await expect(summaryTotal).toHaveText('R$ 40.000,00')
   })
 })

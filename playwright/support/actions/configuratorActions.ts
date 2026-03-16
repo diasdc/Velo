@@ -14,6 +14,15 @@ export function createConfiguratorActions(page: Page) {
       await page.getByRole('button', { name }).click()
     },
 
+    async setOptional(name: string | RegExp, checked: boolean) {
+      const checkbox = page.getByRole('checkbox', { name })
+      if (checked) {
+        await checkbox.check()
+      } else {
+        await checkbox.uncheck()
+      }
+    },
+
     async expectPrice(price: string) {
       const priceElement = page.getByTestId('total-price')
       await expect(priceElement).toBeVisible()
